@@ -313,4 +313,5 @@ void parseCLCCResponse(String response)
 void IRAM_ATTR ringISR()
 {
     incomingCall = true;
+    updateDisplayWhileCalling();
 }
