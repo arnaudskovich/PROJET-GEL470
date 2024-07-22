@@ -1,0 +1,125 @@
+#include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_Keypad.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+const byte ROWS = 4; // Four rows
+const byte COLS = 4; // Four columns
+char keys[ROWS][COLS] = {
+    {'1', '2', '3', 'A'},
+    {'4', '5', '6', 'B'},
+    {'7', '8', '9', 'C'},
+    {'*', '0', '#', 'D'}};
+byte rowPins[ROWS] = {13, 12, 14, 27}; // Connect to the row pinouts of the keypad
+byte colPins[COLS] = {26, 25, 33, 32}; // Connect to the column pinouts of the keypad
+
+Adafruit_Keypad customKeypad = Adafruit_Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+String phoneNumber = "";
+
+// Defining functions to write
+void updateDisplay();
+void makeCall();
+void hangUp();
+void receiveCall();
+
+void setup()
+{
+    Serial.begin(115200);
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+    {
+        Serial.println(F("SSD1306 allocation failed"));
+        for (;;)
+            ;
+    }
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 10);
+    display.println("Enter Number:");
+    display.display();
+
+    customKeypad.begin();
+}
+
+void loop()
+{
+    customKeypad.tick();
+
+    while (customKeypad.available())
+    {
+        keypadEvent e = customKeypad.read();
+
+        if (e.bit.EVENT == KEY_JUST_PRESSED)
+        {
+            char key = e.bit.KEY;
+            Serial.println(key);
+
+            if (key == '#')
+            { // '#' to simulate call button
+                makeCall();
+            }
+            else if (key == '*')
+            { // '*' to simulate hang up
+                hangUp();
+            }
+            else if (key == 'A')
+            { // 'A' to simulate receiving call
+                receiveCall();
+            }
+            else
+            {
+                phoneNumber += key;
+                updateDisplay();
+            }
+        }
+    }
+}
+
+void updateDisplay()
+{
+    display.clearDisplay();
+    display.setCursor(0, 10);
+    display.println("Enter Number:");
+    display.setCursor(0, 30);
+    display.println(phoneNumber);
+    display.display();
+}
+
+void makeCall()
+{
+    display.clearDisplay();
+    display.setCursor(0, 10);
+    display.println("Calling:");
+    display.setCursor(0, 30);
+    display.println(phoneNumber);
+    display.display();
+    Serial.println("Calling: " + phoneNumber);
+    // Add your code to initiate the call here
+}
+
+void hangUp()
+{
+    display.clearDisplay();
+    display.setCursor(0, 10);
+    display.println("Call Ended");
+    display.display();
+    Serial.println("Call Ended");
+    phoneNumber = "";
+    delay(2000);
+    updateDisplay();
+}
+
+void receiveCall()
+{
+    display.clearDisplay();
+    display.setCursor(0, 10);
+    display.println("Incoming Call...");
+    display.display();
+    Serial.println("Incoming Call...");
+    // Add your code to receive the call here
+}
